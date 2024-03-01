@@ -87,8 +87,7 @@ fn main() {
     println!("The result is = {}", expr.get_result().unwrap());
 }
 ```
-For more detailed usage, check documentation.
-
+For more detailed usage, check documentation: [Docs](https://docs.rs/kalkulator/latest/kalkulator/)
 # Contributing
 
 Contributions are welcome!
