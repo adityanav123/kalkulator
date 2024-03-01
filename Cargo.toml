@@ -1,0 +1,21 @@
+[package]
+name = "kalkulator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Aditya Navphule<adityanavphule122@gmail.com>"]
+description = "A mathematical expression evaluation tool and library"
+repository = "https://github.com/adityanav123/kalkulator"
+license = "MIT"
+keywords = ["calculator", "math", "expression-evaulator", "factorial"]
+
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "kalkulator"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.1", features = ["derive"] }
+lazy_static = "1.4.0"
