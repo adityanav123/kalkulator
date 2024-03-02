@@ -5,7 +5,7 @@
 
 ## Features
 
-- Evaluate mathematical expressions with support for basic arithmetic operations and factorials.
+- Evaluate mathematical expressions with support for basic arithmatic operations, factorial, logical operations
 - Convert expressions to postfix notation.
 - Extendable for future operations and functionalities.
 
@@ -28,7 +28,6 @@ This command installs the `kalkulator` binary, making it available for use in yo
 Add `kalkulator` as a dependency in your `Cargo.toml` to use it in your Rust project.
 
 ```toml
-Eg.
 [dependencies]
 kalkulator = "0.1.1"
 ```
