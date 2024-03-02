@@ -1,23 +1,29 @@
 //! Command-line interface for the `kalkulator` library.
 //!
-//! This interface allows users to either convert mathematical expressions to postfix notation or evaluate them directly.
+//! This interface allows users to either convert mathematical expressions to postfix notation or evaluate them directly, and to display all supported operators.
 //!
 //! # Usage
 //!
 //! To convert an expression to postfix notation without evaluating:
-//! ```
+//! ```bash
 //! kalkulator --expr "2+3/4" -p
 //! ```
 //!
 //! To evaluate the result of an expression:
-//! ```
+//! ```bash
 //! kalkulator --expr "2+3/4"
 //! ```
-
-//! # Examples
 //!
-//! Basic usage of the `Expression` struct to evaluate an arithmetic expression:
+//! To show all available operations:
+//! ```bash
+//! kalkulator --show-ops
+//! ```
 //!
+//! # Library Usage Examples
+//!
+//! Below are examples showcasing how to use the `Expression` struct within Rust code to evaluate mathematical expressions.
+//!
+//! Basic usage to evaluate an arithmetic expression:
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -27,8 +33,7 @@
 //! assert_eq!(expr.get_result().unwrap(), 11); // The result is 11
 //! ```
 //!
-//! Using the `Expression` struct to evaluate an expression with factorial and division:
-//!
+//! Evaluating an expression with factorial and division:
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -39,7 +44,6 @@
 //! ```
 //!
 //! Evaluating an expression involving all supported operations:
-//!
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -117,6 +121,7 @@ impl Expression {
             '+' | '-' => 1,
             '*' | '/' => 2,
             '^' => 3,
+            '&' | '|' | '~' => 0, // ~ : XOR logical operator
             _ => 0,
         }
     }
@@ -144,7 +149,7 @@ impl Expression {
                     Self::flush_num_buffer(&mut number_buffer, &mut output_queue);
                     tokens.next();
                 }
-                '+' | '-' | '*' | '/' | '^' => {
+                '+' | '-' | '*' | '/' | '^' | '&' | '|' | '~' => {
                     Self::flush_num_buffer(&mut number_buffer, &mut output_queue);
                     while let Some(&operation) = stack.last() {
                         if operation == '(' || !Self::has_higher_precedence(operation, ch) {
@@ -248,6 +253,22 @@ impl Expression {
                     } else {
                         return Err(ErrorKind::InsufficientOperands);
                     }
+                }
+                "&" | "|" | "~" => {
+                    if stack.len() < 2 {
+                        return Err(ErrorKind::InsufficientOperands);
+                    }
+                    let operand1 = stack.pop().unwrap() as i64;
+                    let operand2 = stack.pop().unwrap() as i64;
+
+                    let result = match *token {
+                        "&" => operand1 & operand2,
+                        "|" => operand1 | operand2,
+                        "~" => operand1 ^ operand2,
+                        _ => unreachable!(), // already validated during infix to postfix conversion
+                    };
+
+                    stack.push(result as f64);
                 }
                 _ => {
                     if let Ok(num) = token.parse::<f64>() {
