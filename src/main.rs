@@ -1,5 +1,5 @@
 use clap::Parser;
-use kalkulator::{ErrorKind, Expression};
+use kalkulator::Expression;
 
 /// Command-line arguments accepted by `kalkulator`.
 #[derive(Parser, Debug)]
@@ -28,17 +28,7 @@ fn main() {
         Ok(_) => {} // In case of success, nothing needs to be done here.
         Err(e) => {
             // Handle different kinds of errors with appropriate messages
-            eprintln!(
-                "Error processing expression: {}",
-                match e {
-                    ErrorKind::InvalidExpression => "Invalid expression entered.",
-                    ErrorKind::InsufficientOperands => "Insufficient operands for operation.",
-                    ErrorKind::DivisionByZero => "Attempted division by zero.",
-                    ErrorKind::Overflow => "Numeric overflow occurred.",
-                    ErrorKind::InvalidToken => "Invalid token encountered in expression.",
-                    ErrorKind::MalformedExpression => "The expression is malformed.",
-                }
-            );
+            eprintln!("Error processing expression: {}", e.as_str());
         }
     }
 }
