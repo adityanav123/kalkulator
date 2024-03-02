@@ -72,22 +72,35 @@ Output:
     Result = 24
 ```
 
-## Library
+To show all available operations:
+```bash
+kalkulator --show-ops
+```
+
+## Library Usage
 
 Here is a basic example of using `kalkulator` to evaluate an expression within a Rust project:
 
 ```rust
 use kalkulator::Expression;
 
-fn main() {
-    let mut expr = Expression::new("3+4*2");
-    expr.infix_to_postfix().unwrap();
-    expr.compute_expression().unwrap();
-
-    println!("The result is = {}", expr.get_result().unwrap());
-}
+let mut expr = Expression::new("3+4*2");
+expr.infix_to_postfix().unwrap(); // Converts to postfix notation
+expr.compute_expression().unwrap(); // Evaluates the expression
+assert_eq!(expr.get_result().unwrap(), 11); // The result is 11
 ```
+
+Using the Expression struct to evaluate an expression with factorial and division:
+```rust
+use kalkulator::Expression;
+
+let mut expr = Expression::new("4!/(2+3)");
+expr.infix_to_postfix().unwrap(); // Converts to postfix notation
+expr.compute_expression().unwrap(); // Evaluates the expression
+assert_eq!(expr.get_result().unwrap(), 24); // The result is 24 (120 / 5)
+```
+
 For more detailed usage, check documentation: [Docs](https://docs.rs/kalkulator/latest/kalkulator/)
 # Contributing
 
-Contributions are welcome!
+Contributions are welcome!, Whether it's adding new features, improving existing ones, or reporting bugs, your input is valuable. Check out the project's repository on GitHub
