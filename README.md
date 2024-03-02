@@ -5,7 +5,7 @@
 
 ## Features
 
-- Evaluate mathematical expressions with support for basic arithmetic operations and factorials.
+- Evaluate mathematical expressions with support for basic arithmatic operations, factorial, logical operations
 - Convert expressions to postfix notation.
 - Extendable for future operations and functionalities.
 
@@ -29,7 +29,7 @@ Add `kalkulator` as a dependency in your `Cargo.toml` to use it in your Rust pro
 
 ```toml
 [dependencies]
-kalkulator = "0.1.0"
+kalkulator = "0.1.1"
 ```
 
 ## Usage
@@ -52,7 +52,7 @@ Evaluate an expression with basic arithmetic operations:
 
 Command: 
 ```bash 
-    kalkulator --expr "3+4*2"
+    kalkulator --expr "3+4^2"
 ```
 
 Output:

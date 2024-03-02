@@ -1,23 +1,29 @@
 //! Command-line interface for the `kalkulator` library.
 //!
-//! This interface allows users to either convert mathematical expressions to postfix notation or evaluate them directly.
+//! This interface allows users to either convert mathematical expressions to postfix notation or evaluate them directly, and to display all supported operators.
 //!
 //! # Usage
 //!
 //! To convert an expression to postfix notation without evaluating:
-//! ```
+//! ```bash
 //! kalkulator --expr "2+3/4" -p
 //! ```
 //!
 //! To evaluate the result of an expression:
-//! ```
+//! ```bash
 //! kalkulator --expr "2+3/4"
 //! ```
-
-//! # Examples
 //!
-//! Basic usage of the `Expression` struct to evaluate an arithmetic expression:
+//! To show all available operations:
+//! ```bash
+//! kalkulator --show-ops
+//! ```
 //!
+//! # Library Usage Examples
+//!
+//! Below are examples showcasing how to use the `Expression` struct within Rust code to evaluate mathematical expressions.
+//!
+//! Basic usage to evaluate an arithmetic expression:
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -27,8 +33,7 @@
 //! assert_eq!(expr.get_result().unwrap(), 11); // The result is 11
 //! ```
 //!
-//! Using the `Expression` struct to evaluate an expression with factorial and division:
-//!
+//! Evaluating an expression with factorial and division:
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -39,7 +44,6 @@
 //! ```
 //!
 //! Evaluating an expression involving all supported operations:
-//!
 //! ```
 //! use kalkulator::Expression;
 //!
@@ -56,14 +60,14 @@ use std::sync::Mutex;
 extern crate lazy_static;
 
 __lazy_static_internal!(@MAKE TY, ,(pub),FACTORIAL_CACHE);
-__lazy_static_internal!(@TAIL,FACTORIAL_CACHE:Mutex<Vec<i64>>  = Mutex::new(vec![1,1]));
+__lazy_static_internal!(@TAIL,FACTORIAL_CACHE:Mutex<Vec<f64>>  = Mutex::new(vec![1.0,1.0]));
 lazy_static!();
 
 /// Represents an arithmetic expression, its postfix notation, and computation result.
 pub struct Expression {
     pub expr: String,
     pub post_fix: String,
-    pub result: Result<i64, ErrorKind>,
+    pub result: Result<f64, ErrorKind>,
 }
 
 /// Enumerates possible errors that can occur during expression parsing and evaluation.
@@ -75,6 +79,8 @@ pub enum ErrorKind {
     Overflow,
     InvalidToken,
     MalformedExpression,
+    FactorialNonInteger,
+    FactorialNegative,
 }
 
 impl ErrorKind {
@@ -87,6 +93,8 @@ impl ErrorKind {
             ErrorKind::Overflow => "Overflow",
             ErrorKind::InvalidToken => "Invalid token",
             ErrorKind::MalformedExpression => "Malformed postfix expression",
+            ErrorKind::FactorialNegative => "Factorial of a negative number",
+            ErrorKind::FactorialNonInteger => "Factorial of a non-integer",
         }
     }
 }
@@ -112,7 +120,9 @@ impl Expression {
         match operator {
             '+' | '-' => 1,
             '*' | '/' => 2,
-            _ => 0, // highest precedence
+            '^' => 3,
+            '&' | '|' | '~' => 0, // ~ : XOR logical operator
+            _ => 0,
         }
     }
 
@@ -126,7 +136,7 @@ impl Expression {
 
         while let Some(&ch) = tokens.peek() {
             match ch {
-                '0'..='9' => {
+                '0'..='9' | '.' => {
                     number_buffer.push(ch);
                     tokens.next();
                 }
@@ -139,7 +149,7 @@ impl Expression {
                     Self::flush_num_buffer(&mut number_buffer, &mut output_queue);
                     tokens.next();
                 }
-                '+' | '-' | '*' | '/' => {
+                '+' | '-' | '*' | '/' | '^' | '&' | '|' | '~' => {
                     Self::flush_num_buffer(&mut number_buffer, &mut output_queue);
                     while let Some(&operation) = stack.last() {
                         if operation == '(' || !Self::has_higher_precedence(operation, ch) {
@@ -164,7 +174,7 @@ impl Expression {
                     }
                     tokens.next();
                 }
-                _ => return Err(ErrorKind::InvalidExpression),
+                _ => return Err(ErrorKind::InvalidToken),
             }
         }
 
@@ -202,11 +212,11 @@ impl Expression {
     /// Evaluates the postfix expression and stores the 'result'
     pub fn compute_expression(&mut self) -> Result<(), ErrorKind> {
         let post_fix_vector: Vec<&str> = self.post_fix.split_whitespace().collect();
-        let mut stack: Vec<i64> = Vec::new();
+        let mut stack: Vec<f64> = Vec::new();
 
         for token in post_fix_vector.iter() {
             match *token {
-                "+" | "-" | "*" | "/" => {
+                "+" | "-" | "*" | "/" | "^" => {
                     if stack.len() < 2 {
                         return Err(ErrorKind::InsufficientOperands);
                     }
@@ -218,25 +228,50 @@ impl Expression {
                         "-" => operand1 - operand2,
                         "*" => operand1 * operand2,
                         "/" => {
-                            if operand2 == 0 {
+                            if operand2 == 0.0 {
                                 return Err(ErrorKind::DivisionByZero);
                             }
                             operand1 / operand2
                         }
+                        "^" => operand1.powf(operand2),
                         _ => unreachable!(), // Already validated during infix to postfix conversion
                     };
                     stack.push(result);
                 }
                 "!" => {
                     if let Some(a) = stack.pop() {
+                        if a < 0.0 || a.fract() != 0.0 {
+                            // considering only positive integer like values
+                            return Err(if a < 0.0 {
+                                ErrorKind::FactorialNegative
+                            } else {
+                                ErrorKind::FactorialNonInteger
+                            });
+                        }
                         let fact = Self::factorial(a as usize)?;
                         stack.push(fact);
                     } else {
                         return Err(ErrorKind::InsufficientOperands);
                     }
                 }
+                "&" | "|" | "~" => {
+                    if stack.len() < 2 {
+                        return Err(ErrorKind::InsufficientOperands);
+                    }
+                    let operand1 = stack.pop().unwrap() as i64;
+                    let operand2 = stack.pop().unwrap() as i64;
+
+                    let result = match *token {
+                        "&" => operand1 & operand2,
+                        "|" => operand1 | operand2,
+                        "~" => operand1 ^ operand2,
+                        _ => unreachable!(), // already validated during infix to postfix conversion
+                    };
+
+                    stack.push(result as f64);
+                }
                 _ => {
-                    if let Ok(num) = token.parse::<i64>() {
+                    if let Ok(num) = token.parse::<f64>() {
                         stack.push(num);
                     } else {
                         return Err(ErrorKind::InvalidToken);
@@ -255,16 +290,18 @@ impl Expression {
     }
 
     /// Computes factorial of a number, utilizing a cache to improve performance
-    fn factorial(n: usize) -> Result<i64, ErrorKind> {
+    fn factorial(n: usize) -> Result<f64, ErrorKind> {
         let mut cache = FACTORIAL_CACHE.lock().map_err(|_| ErrorKind::Overflow)?;
 
         if n >= cache.len() {
             for i in cache.len()..=n {
                 let last = *cache.last().unwrap();
-                match last.checked_mul(i as i64) {
-                    Some(result) => cache.push(result),
-                    None => return Err(ErrorKind::Overflow),
+                let result = last * i as f64;
+
+                if result.is_infinite() {
+                    return Err(ErrorKind::Overflow);
                 }
+                cache.push(result);
             }
         }
 
@@ -272,7 +309,7 @@ impl Expression {
     }
 
     /// Returns reference to the computation 'Result<>'
-    pub fn get_result(&self) -> &Result<i64, ErrorKind> {
+    pub fn get_result(&self) -> &Result<f64, ErrorKind> {
         &self.result
     }
 
