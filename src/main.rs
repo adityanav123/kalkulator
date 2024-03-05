@@ -6,7 +6,7 @@ use kalkulator::Expression;
 #[command(
     name = "kalkulator",
     about = "kalkulator: A command line calculator using Rust",
-    version = "0.1.1"
+    version = "0.2.0"
 )]
 pub struct Args {
     /// The mathematical expression to be processed.
