@@ -9,6 +9,15 @@
 - Convert expressions to postfix notation.
 - Extendable for future operations and functionalities.
 
+### Further Extensions
+
+- [ ] Support for Logarithmic and Trignometric Functions
+- [☑](done) Exponentiation (x^y)
+- [ ] Absolute Value, Rounding Functions
+- [ ] Complex Numbers Support
+- [ ] Computation history support
+
+
 ## Installation
 
 ### As a Command-Line Tool
